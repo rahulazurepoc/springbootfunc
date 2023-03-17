@@ -34,10 +34,28 @@ public class Function {
         final String query = request.getQueryParameters().get("name");
         final String name = request.getBody().orElse(query);
 
+        /*send azure function trigger input 'name' to a service bus topic*/
+        // Create a Service Bus client
+        final String connectionString = System.getenv("ServiceBusConnectionString");
+        final String topicName = System.getenv("ServiceBusTopicName");
+        final ServiceBusClientBuilder serviceBusClientBuilder = new ServiceBusClientBuilder()
+            .connectionString(connectionString);
+        final ServiceBusSenderAsyncClient senderAsyncClient = serviceBusClientBuilder
+            .sender()
+            .topicName(topicName)
+            .buildAsyncClient();
+        senderAsyncClient.sendMessage(new ServiceBusMessage(name));
+        
+        
+
+
+
         if (name == null) {
             return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a name on the query string or in the request body").build();
         } else {
             return request.createResponseBuilder(HttpStatus.OK).body("Hello, " + name).build();
         }
+
+    
     }
 }
